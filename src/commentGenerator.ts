@@ -56,71 +56,159 @@ export class CommentGenerator {
     private extractFunction(document: vscode.TextDocument, position: vscode.Position): string | null {
         const text = document.getText();
         const lines = text.split('\n');
-        let startLine = position.line;
+        
+        // Encontrar la función que contiene la posición actual
+        const functionInfo = this.findContainingFunction(lines, position.line);
+        if (!functionInfo) return null;
 
-        // Buscar hacia arriba hasta encontrar el inicio de la función
-        while (startLine >= 0) {
-            const line = lines[startLine].trim();
-            if (line.includes('function') || line.includes('=>') || 
-                (line.includes('async') && (line.includes('function') || line.includes('=>'))) ||
-                /^\s*(async\s+)?\w+\s*\([^)]*\)\s*{/.test(line)) {
-                break;
+        return lines.slice(functionInfo.start, functionInfo.end + 1).join('\n');
+    }
+
+    private findContainingFunction(lines: string[], currentLine: number): {start: number, end: number} | null {
+        const functionPatterns = [
+            /^\s*(export\s+)?(default\s+)?(async\s+)?function\s+\w+/,
+            /^\s*(export\s+)?(default\s+)?(const|let|var)\s+\w+\s*=\s*(async\s+)?\(/,
+            /^\s*(export\s+)?(default\s+)?(const|let|var)\s+\w+\s*=\s*(async\s+)?\w+\s*=>/,
+            /^\s*(public|private|protected|static|async)*\s*(async\s+)?\w+\s*\(/,
+            /^\s*\w+\s*:\s*(async\s+)?\(/,
+            /^\s*(async\s+)?\w+\s*\([^)]*\)\s*=>/
+        ];
+
+        // Buscar todas las funciones y encontrar cuál contiene la línea actual
+        const functions = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (this.isFunctionStart(line, functionPatterns)) {
+                const endLine = this.findFunctionEnd(lines, i);
+                if (endLine !== -1) {
+                    functions.push({ start: i, end: endLine });
+                }
             }
-            startLine--;
         }
 
-        if (startLine < 0) return null;
+        // Encontrar la función más específica (más anidada) que contiene la línea actual
+        let containingFunction = null;
+        for (const func of functions) {
+            if (currentLine >= func.start && currentLine <= func.end) {
+                if (!containingFunction || 
+                    (func.start > containingFunction.start && func.end < containingFunction.end)) {
+                    containingFunction = func;
+                }
+            }
+        }
 
-        // Buscar hacia abajo hasta encontrar el final de la función
-        let endLine = startLine;
+        return containingFunction;
+    }
+
+    private isFunctionStart(line: string, patterns: RegExp[]): boolean {
+        if (!line || line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+            return false;
+        }
+
+        // Excluir líneas que son claramente estructuras de control
+        if (/^\s*(if|for|while|switch|try|catch|else|return)\s*\(/.test(line)) {
+            return false;
+        }
+
+        return patterns.some(pattern => pattern.test(line)) || 
+               (line.includes('function') && !line.includes('return')) ||
+               (line.includes('=>') && line.includes('(') && !line.includes('return'));
+    }
+
+    private findFunctionEnd(lines: string[], startLine: number): number {
         let braceCount = 0;
-        let inFunction = false;
+        let inString = false;
+        let stringChar = '';
+        let foundOpenBrace = false;
 
         for (let i = startLine; i < lines.length; i++) {
             const line = lines[i];
             
-            for (const char of line) {
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                const prevChar = j > 0 ? line[j - 1] : '';
+
+                // Manejar strings y template literals
+                if ((char === '"' || char === "'" || char === '`') && prevChar !== '\\') {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar) {
+                        inString = false;
+                        stringChar = '';
+                    }
+                    continue;
+                }
+
+                if (inString) continue;
+
+                // Manejar comentarios de línea
+                if (char === '/' && j + 1 < line.length && line[j + 1] === '/') {
+                    break; // Resto de la línea es comentario
+                }
+
                 if (char === '{') {
                     braceCount++;
-                    inFunction = true;
+                    foundOpenBrace = true;
                 } else if (char === '}') {
                     braceCount--;
-                    if (inFunction && braceCount === 0) {
-                        endLine = i;
-                        return lines.slice(startLine, endLine + 1).join('\n');
+                    if (foundOpenBrace && braceCount === 0) {
+                        return i;
                     }
                 }
             }
         }
 
-        return lines.slice(startLine, Math.min(startLine + 20, lines.length)).join('\n');
+        return -1;
     }
 
     private async insertJSDoc(editor: vscode.TextEditor, functionCode: string, comment: string): Promise<void> {
         const position = editor.selection.active;
         const document = editor.document;
+        const lines = document.getText().split('\n');
         
-        // Buscar hacia arriba hasta encontrar el inicio de la función
-        let functionStartLine = position.line;
-        while (functionStartLine >= 0) {
-            const line = document.lineAt(functionStartLine).text.trim();
-            if (line.includes('function') || line.includes('=>') || 
-                (line.includes('async') && (line.includes('function') || line.includes('=>'))) ||
-                /^\s*(async\s+)?\w+\s*\([^)]*\)\s*{/.test(line)) {
-                break;
+        // Encontrar la función que contiene la posición actual
+        const functionInfo = this.findContainingFunction(lines, position.line);
+        
+        if (functionInfo) {
+            const functionStartLine = functionInfo.start;
+            
+            // Buscar hacia arriba para evitar decoradores y comentarios existentes
+            let insertLine = functionStartLine;
+            while (insertLine > 0) {
+                const prevLine = document.lineAt(insertLine - 1).text.trim();
+                if (prevLine.startsWith('@') || prevLine.startsWith('//') || 
+                    prevLine.startsWith('/*') || prevLine.startsWith('*') || 
+                    prevLine === '') {
+                    insertLine--;
+                } else {
+                    break;
+                }
             }
-            functionStartLine--;
-        }
 
-        if (functionStartLine >= 0) {
             const indent = document.lineAt(functionStartLine).text.match(/^\s*/)?.[0] || '';
-            const formattedComment = comment
+            // Limpiar el comentario y asegurar formato correcto
+            const cleanComment = comment.trim();
+            const formattedComment = cleanComment
                 .split('\n')
                 .map(line => indent + line)
                 .join('\n') + '\n';
 
+            // Verificar si ya hay una línea vacía después de donde insertaremos
+            const nextLineEmpty = insertLine < document.lineCount - 1 && 
+                                 document.lineAt(insertLine).text.trim() === '';
+            
             await editor.edit(editBuilder => {
-                editBuilder.insert(new vscode.Position(functionStartLine, 0), formattedComment);
+                editBuilder.insert(new vscode.Position(insertLine, 0), formattedComment);
+                // Si hay línea vacía extra después del comentario, eliminarla
+                if (nextLineEmpty && insertLine < document.lineCount - 1) {
+                    const nextLine = document.lineAt(insertLine);
+                    if (nextLine.text.trim() === '') {
+                        editBuilder.delete(nextLine.rangeIncludingLineBreak);
+                    }
+                }
             });
         }
     }

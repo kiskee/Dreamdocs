@@ -2,7 +2,7 @@
   "name": "dreamdocs",
   "displayName": "Dreamdocs",
   "description": "🚀 AI-powered code documentation generator. Instantly create JSDoc comments and inline explanations with Groq AI. Boost your code quality and save time!",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "DanielMeCoss",
   "license": "MIT",
   "repository": {
