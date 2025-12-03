@@ -16,6 +16,11 @@ export function activate(context: vscode.ExtensionContext) {
         await commentGenerator.generateInlineComment();
     });
 
+    // Refactor naming command (Ctrl+Shift+R)
+    const refactorNaming = vscode.commands.registerCommand('dreamdocs.refactorNaming', async () => {
+        await commentGenerator.refactorNaming();
+    });
+
     // Set API Key command
     const setApiKey = vscode.commands.registerCommand('dreamdocs.setApiKey', async () => {
         await groqService.setApiKey();
@@ -26,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
         await groqService.testConnection();
     });
 
-    context.subscriptions.push(generateJSDoc, generateInline, setApiKey, testConnection);
+    context.subscriptions.push(generateJSDoc, generateInline, refactorNaming, setApiKey, testConnection);
 }
 
 export function deactivate() {}

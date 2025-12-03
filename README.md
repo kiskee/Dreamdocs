@@ -11,6 +11,7 @@ Experience the magic of AI-powered documentation with Dreamdocs. Turn your silen
 - 🤖 **AI-Powered Magic**: Leverages Groq's ultra-fast AI models
 - 📝 **Dream JSDoc**: Complete function documentation with `@param`, `@returns`, `@throws`, and `@example`
 - 💭 **Thoughtful Comments**: Smart inline explanations that make your code speak
+- 🔄 **Smart Refactoring**: Automatically improve variable and function names with AI
 - ⚡ **Instant Dreams**: Lightning-fast generation with simple shortcuts
 - 🎯 **Mind Reader**: Understands your code's intent and context
 - 🔒 **Secure Vault**: API key stored safely in VS Code's secret storage
@@ -29,6 +30,7 @@ Search for "Dreamdocs" in VS Code Extensions or install from [VS Code Marketplac
 ### 3. Start Dreaming!
 - **`Ctrl+Shift+D`** - Dream up JSDoc documentation
 - **`Ctrl+Shift+C`** - Whisper inline comments
+- **`Ctrl+Shift+N`** - Refactor naming (NEW!)
 
 ## 📖 Dream Examples
 
@@ -75,6 +77,25 @@ const hashedPassword = await bcrypt.hash(password, 10);
 const hashedPassword = await bcrypt.hash(password, 10);
 ```
 
+### Naming Dreams
+Place your cursor inside any function and press `Ctrl+Shift+N`:
+
+```javascript
+// Before - Cryptic names
+function calc(a, b, c) {
+    let x = a * b;
+    let y = x + c;
+    return y;
+}
+
+// After - Crystal clear names ✨
+function calculateProductAndSum(baseAmount, multiplier, additionalFee) {
+    const product = baseAmount * multiplier;
+    const total = product + additionalFee;
+    return total;
+}
+```
+
 ## 🎯 Supported Languages
 
 - JavaScript
@@ -87,6 +108,7 @@ const hashedPassword = await bcrypt.hash(password, 10);
 |---------|----------|-------------|
 | Generate JSDoc Comment | `Ctrl+Shift+D` | Dreams up comprehensive JSDoc documentation |
 | Generate Inline Comment | `Ctrl+Shift+C` | Whispers explanatory comments into existence |
+| Refactor Naming | `Ctrl+Shift+N` | Transforms cryptic names into meaningful ones |
 | Set Groq API Key | - | Configure your magical API key |
 | Test Groq Connection | - | Verify your connection to the dream realm |
 

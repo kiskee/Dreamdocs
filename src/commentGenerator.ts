@@ -53,6 +53,37 @@ export class CommentGenerator {
         }
     }
 
+    async refactorNaming(): Promise<void> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+
+        const position = editor.selection.active;
+        const functionCode = this.extractFunction(editor.document, position);
+        
+        if (!functionCode) {
+            vscode.window.showWarningMessage('No function found at current position');
+            return;
+        }
+
+        const prompt = `Analyze this JavaScript/TypeScript function and improve the naming of variables, parameters, and the function name itself.
+        Follow these naming conventions:
+        - Use camelCase for variables and functions
+        - Use descriptive, meaningful names
+        - Avoid abbreviations unless they're widely understood
+        - Use verbs for functions (e.g., getUserData, calculateTotal)
+        - Use nouns for variables (e.g., userData, totalAmount)
+        
+        Respond ONLY with the refactored code without any markdown formatting, code blocks, or explanations. Just the plain code:
+
+        ${functionCode}`;
+
+        const refactoredCode = await this.groqService.generateComment(prompt);
+        if (refactoredCode) {
+            const cleanCode = this.cleanCodeResponse(refactoredCode);
+            await this.replaceFunction(editor, functionCode, cleanCode);
+        }
+    }
+
     private extractFunction(document: vscode.TextDocument, position: vscode.Position): string | null {
         const text = document.getText();
         const lines = text.split('\n');
@@ -221,5 +252,38 @@ export class CommentGenerator {
         await editor.edit(editBuilder => {
             editBuilder.insert(new vscode.Position(lineNumber, 0), commentLine);
         });
+    }
+
+    private async replaceFunction(editor: vscode.TextEditor, originalCode: string, refactoredCode: string): Promise<void> {
+        const position = editor.selection.active;
+        const document = editor.document;
+        const lines = document.getText().split('\n');
+        
+        const functionInfo = this.findContainingFunction(lines, position.line);
+        
+        if (functionInfo) {
+            const startPos = new vscode.Position(functionInfo.start, 0);
+            const endPos = new vscode.Position(functionInfo.end + 1, 0);
+            const range = new vscode.Range(startPos, endPos);
+            
+            const indent = document.lineAt(functionInfo.start).text.match(/^\s*/)?.[0] || '';
+            const formattedCode = refactoredCode.trim()
+                .split('\n')
+                .map(line => line.trim() ? indent + line : line)
+                .join('\n') + '\n';
+
+            await editor.edit(editBuilder => {
+                editBuilder.replace(range, formattedCode);
+            });
+
+            vscode.window.showInformationMessage('Function naming refactored successfully!');
+        }
+    }
+
+    private cleanCodeResponse(code: string): string {
+        return code
+            .replace(/^```[a-zA-Z]*\n?/, '') // Remove opening code block
+            .replace(/\n?```$/, '') // Remove closing code block
+            .trim();
     }
 }
