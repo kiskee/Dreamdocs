@@ -30,7 +30,8 @@ Search for "Dreamdocs" in VS Code Extensions or install from [VS Code Marketplac
 ### 3. Start Dreaming!
 - **`Ctrl+Shift+D`** - Dream up JSDoc documentation
 - **`Ctrl+Shift+C`** - Whisper inline comments
-- **`Ctrl+Shift+N`** - Refactor naming (NEW!)
+- **`Ctrl+Shift+N`** - Refactor naming
+- **`Ctrl+Shift+L`** - Add smart debug logs (NEW!) 🐛
 
 ## 📖 Dream Examples
 
@@ -96,6 +97,52 @@ function calculateProductAndSum(baseAmount, multiplier, additionalFee) {
 }
 ```
 
+### Debug Dreams 🐛
+Place your cursor inside any function and press `Ctrl+Shift+L`:
+
+```javascript
+// Before - Silent debugging
+async function processPayment(amount, userId) {
+    const user = getUserById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    const balance = user.getBalance();
+    if (balance < amount) {
+        return { success: false, reason: 'insufficient_funds' };
+    }
+    
+    const result = chargeCard(user.cardId, amount);
+    return { success: true, transactionId: result.id };
+}
+
+// After - Smart debug logs ✨
+async function processPayment(amount, userId) {
+    console.log('🚀 [processPayment] Starting with:', { amount, userId });
+    
+    const user = getUserById(userId);
+    console.log('👤 [processPayment] User lookup result:', { found: !!user, userId });
+    
+    if (!user) {
+        console.error('❌ [processPayment] User not found:', { userId });
+        throw new Error('User not found');
+    }
+    
+    const balance = user.getBalance();
+    console.log('💰 [processPayment] Current balance:', { balance, required: amount });
+    
+    if (balance < amount) {
+        console.warn('⚠️ [processPayment] Insufficient funds:', { balance, amount });
+        return { success: false, reason: 'insufficient_funds' };
+    }
+    
+    const result = chargeCard(user.cardId, amount);
+    console.log('✅ [processPayment] Payment successful:', { transactionId: result.id });
+    return { success: true, transactionId: result.id };
+}
+```
+
 ## 🎯 Supported Languages
 
 - JavaScript
@@ -109,6 +156,8 @@ function calculateProductAndSum(baseAmount, multiplier, additionalFee) {
 | Generate JSDoc Comment | `Ctrl+Shift+D` | Dreams up comprehensive JSDoc documentation |
 | Generate Inline Comment | `Ctrl+Shift+C` | Whispers explanatory comments into existence |
 | Refactor Naming | `Ctrl+Shift+N` | Transforms cryptic names into meaningful ones |
+| Add Smart Debug Logs | `Ctrl+Shift+L` | Adds intelligent debug logs at critical points |
+| Remove Debug Logs | - | Cleans up all debug logs from your code |
 | Set Groq API Key | - | Configure your magical API key |
 | Test Groq Connection | - | Verify your connection to the dream realm |
 

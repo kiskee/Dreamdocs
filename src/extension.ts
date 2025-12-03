@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import { GroqService } from './groqService';
 import { CommentGenerator } from './commentGenerator';
+import { DebugLogger } from './debugLogger';
 
 export function activate(context: vscode.ExtensionContext) {
     const groqService = new GroqService(context);
     const commentGenerator = new CommentGenerator(groqService);
+    const debugLogger = new DebugLogger(groqService);
 
     // Generate JSDoc command (Ctrl+Shift+D)
     const generateJSDoc = vscode.commands.registerCommand('dreamdocs.generateJSDoc', async () => {
@@ -31,7 +33,17 @@ export function activate(context: vscode.ExtensionContext) {
         await groqService.testConnection();
     });
 
-    context.subscriptions.push(generateJSDoc, generateInline, refactorNaming, setApiKey, testConnection);
+    // Add debug logs command (Ctrl+Shift+L)
+    const addDebugLogs = vscode.commands.registerCommand('dreamdocs.addDebugLogs', async () => {
+        await debugLogger.addDebugLogs();
+    });
+
+    // Remove debug logs command
+    const removeDebugLogs = vscode.commands.registerCommand('dreamdocs.removeDebugLogs', async () => {
+        await debugLogger.removeDebugLogs();
+    });
+
+    context.subscriptions.push(generateJSDoc, generateInline, refactorNaming, setApiKey, testConnection, addDebugLogs, removeDebugLogs);
 }
 
 export function deactivate() {}

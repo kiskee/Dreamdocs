@@ -2,7 +2,7 @@
   "name": "dreamdocs",
   "displayName": "Dreamdocs",
   "description": "🚀 AI-powered code documentation and refactoring tool. Generate JSDoc comments, inline explanations, and improve naming with Groq AI. Boost your code quality!",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "DanielMeCoss",
   "license": "MIT",
   "repository": {
@@ -38,6 +38,14 @@
       {
         "command": "dreamdocs.testConnection",
         "title": "Test Groq Connection"
+      },
+      {
+        "command": "dreamdocs.addDebugLogs",
+        "title": "Add Smart Debug Logs"
+      },
+      {
+        "command": "dreamdocs.removeDebugLogs",
+        "title": "Remove Debug Logs"
       }
     ],
     "keybindings": [
@@ -54,6 +62,11 @@
       {
         "command": "dreamdocs.refactorNaming",
         "key": "ctrl+shift+n",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "dreamdocs.addDebugLogs",
+        "key": "ctrl+shift+l",
         "when": "editorTextFocus"
       }
     ]
