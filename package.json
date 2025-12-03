@@ -1,7 +1,7 @@
 {
   "name": "commentify",
   "displayName": "Commentify",
-  "description": "Generate JSDoc and inline comments using Groq AI",
+  "description": "🚀 AI-powered code documentation generator. Instantly create JSDoc comments and inline explanations with Groq AI. Boost your code quality and save time!",
   "version": "1.0.0",
   "publisher": "danielmecoss",
   "license": "MIT",
@@ -12,7 +12,8 @@
   "engines": {
     "vscode": "^1.74.0"
   },
-  "categories": ["Other"],
+  "categories": ["Other", "Snippets", "Formatters"],
+  "keywords": ["jsdoc", "comments", "documentation", "ai", "groq", "typescript", "javascript", "code-generation"],
   "icon": "icon.png",
   "activationEvents": [],
   "main": "./out/extension.js",
